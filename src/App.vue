@@ -10,33 +10,49 @@
         </div>
       </div>
 
-      <div class="flex flex-col">
-        <!-- Examples Section -->
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-4">
-          <div class="flex flex-wrap gap-2">
+      <div class="flex flex-col gap-4">
+        <!-- Examples Section - Replace with Select Dropdown -->
+        <select
+          class="py-2 px-3 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200"
+          @change="handleExampleChange"
+        >
+          <option value="" disabled selected>Select an example</option>
+          <option v-for="(example, index) in examples" :key="index" :value="index">
+            {{ example.name }}
+          </option>
+        </select>
+        <div class="relative flex flex-col grow">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">JSON Logic:</span>
             <button
-              v-for="(example, index) in examples"
-              :key="index"
-              @click="loadExample(example)"
-              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+              @click="copyMinifiedJsonLogic"
+              class="py-1 px-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
             >
-              {{ example.name }}
+              Copy Minified
             </button>
           </div>
-        </div>
-        <div class="relative flex-1">
           <textarea
             v-model="jsonLogicRules"
             placeholder='{"and": [{">":[{"var":"age"}, 18]}, {"<":[{"var":"age"}, 65]}]}'
             @input="evaluateLogic"
-            class="absolute inset-0 w-full h-full p-3 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300"
+            class="w-full grow p-3 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300"
           ></textarea>
         </div>
         <div v-if="jsonLogicError" class="text-red-500 text-sm mt-1">{{ jsonLogicError }}</div>
+        <div v-if="copyJsonLogicSuccess" class="text-green-500 text-xs mt-1 text-right">Copied to clipboard!</div>
       </div>
 
       <div class="flex flex-col gap-4">
         <div class="flex flex-col grow">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Data:</span>
+            <button
+              @click="copyMinifiedData"
+              class="py-1 px-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              Copy Minified
+            </button>
+          </div>
           <textarea
             v-model="dataObject"
             placeholder='{"age": 25, "name": "John"}'
@@ -45,21 +61,32 @@
           ></textarea>
 
           <div v-if="dataObjectError" class="text-red-500 text-sm mt-1">{{ dataObjectError }}</div>
+          <div v-if="copyDataSuccess" class="text-green-500 text-xs mt-1 text-right">Copied to clipboard!</div>
         </div>
 
-        <div
-          class="grow bg-white dark:bg-gray-700 p-3 border rounded-md font-mono text-sm min-h-[100px] whitespace-pre-wrap dark:text-gray-300"
-          :class="{
-            'border-red-500 text-red-600 dark:text-red-400': resultError,
-            'border-gray-300 dark:border-gray-600': !resultError,
-          }"
-        >
-          {{ result }}
+        <div class="flex flex-col grow">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Result:</span>
+            <button
+              @click="copyMinifiedResult"
+              class="py-1 px-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              Copy Minified
+            </button>
+          </div>
+          <div
+            class="grow bg-white dark:bg-gray-700 p-3 border rounded-md font-mono text-sm min-h-[100px] whitespace-pre-wrap dark:text-gray-300"
+            :class="{
+              'border-red-500 text-red-600 dark:text-red-400': resultError,
+              'border-gray-300 dark:border-gray-600': !resultError,
+            }"
+          >
+            {{ result }}
+          </div>
+          <div v-if="copyResultSuccess" class="text-green-500 text-xs mt-1 text-right">Copied to clipboard!</div>
         </div>
       </div>
     </div>
-
-    <!-- Result Section -->
   </main>
 </template>
 
@@ -80,6 +107,9 @@ const newOperator = ref({
   name: "",
   functionStr: "",
 });
+const copyResultSuccess = ref(false);
+const copyJsonLogicSuccess = ref(false);
+const copyDataSuccess = ref(false);
 
 onMounted(() => {
   jsonLogic.add_operation("isNil", isNil);
@@ -184,11 +214,71 @@ const examples = [
   },
 ];
 
+// Handle example selection from dropdown
+const handleExampleChange = (event) => {
+  const selectedIndex = parseInt(event.target.value);
+  if (!isNaN(selectedIndex) && examples[selectedIndex]) {
+    loadExample(examples[selectedIndex]);
+  }
+};
+
 // Load example into the editor
 const loadExample = (example) => {
   jsonLogicRules.value = JSON.stringify(example.logic, null, 2);
   dataObject.value = JSON.stringify(example.data, null, 2);
   evaluateLogic();
+};
+
+// Copy minified JSON Logic to clipboard
+const copyMinifiedJsonLogic = () => {
+  try {
+    const logicRules = jsonLogicRules.value.trim() ? JSON.parse(jsonLogicRules.value) : null;
+    if (logicRules) {
+      const minified = JSON.stringify(logicRules);
+      navigator.clipboard.writeText(minified);
+      copyJsonLogicSuccess.value = true;
+      setTimeout(() => {
+        copyJsonLogicSuccess.value = false;
+      }, 2000);
+    }
+  } catch (error) {
+    // Do nothing if there's an error
+  }
+};
+
+// Copy minified data object to clipboard
+const copyMinifiedData = () => {
+  try {
+    const data = dataObject.value.trim() ? JSON.parse(dataObject.value) : null;
+    if (data) {
+      const minified = JSON.stringify(data);
+      navigator.clipboard.writeText(minified);
+      copyDataSuccess.value = true;
+      setTimeout(() => {
+        copyDataSuccess.value = false;
+      }, 2000);
+    }
+  } catch (error) {
+    // Do nothing if there's an error
+  }
+};
+
+// Renamed from copyMinifiedLogic to copyMinifiedResult for clarity
+const copyMinifiedResult = () => {
+  try {
+    // Only try to copy if we have valid JSON Logic
+    const logicRules = jsonLogicRules.value.trim() ? JSON.parse(jsonLogicRules.value) : null;
+    if (logicRules) {
+      const minified = JSON.stringify(logicRules);
+      navigator.clipboard.writeText(minified);
+      copyResultSuccess.value = true;
+      setTimeout(() => {
+        copyResultSuccess.value = false;
+      }, 2000);
+    }
+  } catch (error) {
+    // Do nothing if there's an error
+  }
 };
 
 // Evaluate JSON Logic against data
