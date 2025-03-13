@@ -1,6 +1,6 @@
 <template>
   <div class="h-full w-full">
-    <div ref="blocklyDiv" class="w-full h-full min-h-[400px] border border-gray-300 rounded-md overflow-hidden"></div>
+    <div ref="blocklyDiv" class="w-full h-full min-h-[400px] border border-gray-700 rounded-md overflow-hidden"></div>
   </div>
 </template>
 
@@ -32,6 +32,7 @@ const defineCustomBlocks = () => {
     },
   };
 
+  // OR logic block
   Blockly.Blocks["json_logic_or"] = {
     init: function () {
       this.appendValueInput("LEFT").setCheck(null);
@@ -125,6 +126,7 @@ const workspaceToJsonLogic = () => {
 
 // Convert a single block to JSON Logic object
 const blockToJsonLogic = (block) => {
+  if (!block) return null;
   const type = block.type;
 
   switch (type) {
@@ -337,21 +339,68 @@ onMounted(() => {
   if (blocklyDiv.value) {
     defineCustomBlocks();
 
-    // Initialize Blockly workspace with updated theme
-    const theme = Blockly.Theme.defineTheme("modern", {
+    // Initialize Blockly workspace with dark theme
+    const theme = Blockly.Theme.defineTheme("darkTheme", {
       base: Blockly.Themes.Classic,
       componentStyles: {
-        workspaceBackgroundColour: "#f9fafb",
-        toolboxBackgroundColour: "#f3f4f6",
-        toolboxForegroundColour: "#111827",
-        flyoutBackgroundColour: "#ffffff",
-        flyoutForegroundColour: "#1f2937",
-        flyoutOpacity: 0.9,
-        scrollbarColour: "#e5e7eb",
-        insertionMarkerColour: "#60a5fa",
-        insertionMarkerOpacity: 0.3,
+        workspaceBackgroundColour: "#1f2937", // Dark background
+        toolboxBackgroundColour: "#111827", // Dark toolbox
+        toolboxForegroundColour: "#e5e7eb", // Light text
+        flyoutBackgroundColour: "#374151", // Dark flyout
+        flyoutForegroundColour: "#f3f4f6", // Light text for flyout
+        flyoutOpacity: 0.95,
+        scrollbarColour: "#4b5563", // Dark scrollbar
+        insertionMarkerColour: "#3b82f6", // Keep blue for visibility
+        insertionMarkerOpacity: 0.5,
         scrollbarOpacity: 0.8,
-        cursorColour: "#3b82f6",
+        cursorColour: "#60a5fa", // Lighter blue cursor
+      },
+      blockStyles: {
+        logic_blocks: {
+          colourPrimary: "#1d4ed8", // Darker blue
+          colourSecondary: "#2563eb",
+          colourTertiary: "#3b82f6",
+        },
+        loop_blocks: {
+          colourPrimary: "#4338ca", // Darker indigo
+          colourSecondary: "#4f46e5",
+          colourTertiary: "#6366f1",
+        },
+        math_blocks: {
+          colourPrimary: "#6d28d9", // Darker purple
+          colourSecondary: "#7c3aed",
+          colourTertiary: "#8b5cf6",
+        },
+        text_blocks: {
+          colourPrimary: "#be185d", // Darker pink
+          colourSecondary: "#db2777",
+          colourTertiary: "#ec4899",
+        },
+        variable_blocks: {
+          colourPrimary: "#be123c", // Darker rose
+          colourSecondary: "#e11d48",
+          colourTertiary: "#f43f5e",
+        },
+      },
+      categoryStyles: {
+        logic_category: {
+          colour: "#1d4ed8", // Darker blue
+        },
+        loops_category: {
+          colour: "#4338ca", // Darker indigo
+        },
+        math_category: {
+          colour: "#6d28d9", // Darker purple
+        },
+        text_category: {
+          colour: "#be185d", // Darker pink
+        },
+        variables_category: {
+          colour: "#be123c", // Darker rose
+        },
+        special_category: {
+          colour: "#0f766e", // Darker teal
+        },
       },
     });
 
@@ -362,7 +411,7 @@ onMounted(() => {
           {
             kind: "category",
             name: "Logic",
-            colour: 210,
+            colour: "#1d4ed8", // Darker blue
             contents: [
               { kind: "block", type: "json_logic_and" },
               { kind: "block", type: "json_logic_or" },
@@ -371,7 +420,7 @@ onMounted(() => {
           {
             kind: "category",
             name: "Comparisons",
-            colour: 160,
+            colour: "#4338ca", // Darker indigo
             contents: [
               { kind: "block", type: "json_logic_equal" },
               { kind: "block", type: "json_logic_greater" },
@@ -381,13 +430,13 @@ onMounted(() => {
           {
             kind: "category",
             name: "Variables",
-            colour: 330,
+            colour: "#be123c", // Darker rose
             contents: [{ kind: "block", type: "json_logic_var" }],
           },
           {
             kind: "category",
             name: "Values",
-            colour: 65,
+            colour: "#15803d", // Darker green
             contents: [
               { kind: "block", type: "json_logic_number" },
               { kind: "block", type: "json_logic_string" },
@@ -396,7 +445,7 @@ onMounted(() => {
           {
             kind: "category",
             name: "Special",
-            colour: 290,
+            colour: "#0f766e", // Darker teal
             contents: [
               { kind: "block", type: "json_logic_isnil" },
               { kind: "block", type: "json_logic_isempty" },
@@ -406,6 +455,7 @@ onMounted(() => {
       },
       theme: theme,
       trashcan: true,
+      sounds: false, // Disable all sounds when interacting with blocks
       move: {
         scrollbars: true,
       },

@@ -1,0 +1,23 @@
+:root {
+  /* Use only dark theme colors */
+  --color-bg: #1e1e1e;
+  --color-text: #ffffff;
+  --color-primary: #3b82f6;
+  --color-secondary: #64748b;
+  --color-accent: #f59e0b;
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  --color-border: #374151;
+  --color-card-bg: #2d3748;
+  --color-input-bg: #1f2937;
+  --color-button-bg: #3b82f6;
+
+  /* If any other dark theme colors exist, keep them */
+  /* ...existing code... */
+}
+
+/* Remove any :dark selectors and keep the styles directly */
+/* ...existing code... */
