@@ -1,53 +1,73 @@
 <template>
-  <div id="app">
-    <h1>JSON Logic Tester</h1>
-
-    <div class="examples-section">
-      <h3>Examples</h3>
-      <div class="examples-container">
-        <button v-for="(example, index) in examples" :key="index" @click="loadExample(example)" class="example-btn">
-          {{ example.name }}
-        </button>
+  <main class="bg-white dark:bg-gray-900 h-screen w-screen p-4">
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+      <div class="lg:col-span-2 flex flex-col">
+        <div
+          class="flex-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-white dark:bg-gray-800"
+        >
+          <BlockEditor v-model:jsonLogic="jsonLogicRules" />
+        </div>
       </div>
-    </div>
 
-    <div class="container">
-      <div class="editor-panel">
-        <div class="editor-section">
-          <h2>JSON Logic Rules</h2>
+      <div class="flex flex-col">
+        <!-- Examples Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-4">
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="(example, index) in examples"
+              :key="index"
+              @click="loadExample(example)"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+            >
+              {{ example.name }}
+            </button>
+          </div>
+        </div>
+        <div class="relative flex-1">
           <textarea
             v-model="jsonLogicRules"
-            placeholder='Enter your JSON Logic rules here. Example: {"and": [{">":[{"var":"age"}, 18]}, {"<":[{"var":"age"}, 65]}]}'
+            placeholder='{"and": [{">":[{"var":"age"}, 18]}, {"<":[{"var":"age"}, 65]}]}'
             @input="evaluateLogic"
+            class="absolute inset-0 w-full h-full p-3 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300"
           ></textarea>
-          <div class="error" v-if="jsonLogicError">{{ jsonLogicError }}</div>
         </div>
-
-        <div class="editor-section">
-          <h2>Data Object</h2>
-          <textarea
-            v-model="dataObject"
-            placeholder='Enter your data object here. Example: {"age": 25, "name": "John"}'
-            @input="evaluateLogic"
-          ></textarea>
-          <div class="error" v-if="dataObjectError">{{ dataObjectError }}</div>
-        </div>
+        <div v-if="jsonLogicError" class="text-red-500 text-sm mt-1">{{ jsonLogicError }}</div>
       </div>
 
-      <div class="result-panel">
-        <h2>Result</h2>
-        <div class="result-content" :class="{ error: resultError }">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col grow">
+          <textarea
+            v-model="dataObject"
+            placeholder='{"age": 25, "name": "John"}'
+            @input="evaluateLogic"
+            class="w-full h-full p-3 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300"
+          ></textarea>
+
+          <div v-if="dataObjectError" class="text-red-500 text-sm mt-1">{{ dataObjectError }}</div>
+        </div>
+
+        <div
+          class="grow bg-white dark:bg-gray-700 p-3 border rounded-md font-mono text-sm min-h-[100px] whitespace-pre-wrap dark:text-gray-300"
+          :class="{
+            'border-red-500 text-red-600 dark:text-red-400': resultError,
+            'border-gray-300 dark:border-gray-600': !resultError,
+          }"
+        >
           {{ result }}
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Result Section -->
+  </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import jsonLogic from "json-logic-js";
 import { isNil, isEmpty } from "ramda";
+import BlockEditor from "./components/BlockEditor.vue";
 
 // Reactive state
 const jsonLogicRules = ref("");
@@ -64,12 +84,19 @@ const newOperator = ref({
 onMounted(() => {
   jsonLogic.add_operation("isNil", isNil);
   jsonLogic.add_operation("isEmpty", isEmpty);
-});
 
-// Get string representation of a function
-const getFunctionString = (func) => {
-  return func.toString();
-};
+  // Initialize Preline UI
+  import("preline/preline").then(({ HSThemeAppearance }) => {
+    // Set dark mode as default
+    if (!localStorage.getItem("hs_theme")) {
+      localStorage.setItem("hs_theme", "dark");
+      document.documentElement.classList.add("dark");
+    }
+
+    // Initialize Preline's theme functionality
+    HSThemeAppearance.init();
+  });
+});
 
 // Example models
 const examples = [
@@ -206,197 +233,20 @@ const evaluateLogic = () => {
     resultError.value = true;
   }
 };
+
+// Watch for changes in jsonLogicRules to evaluate logic
+watch(jsonLogicRules, (newVal) => {
+  if (newVal) {
+    evaluateLogic();
+  }
+});
 </script>
 
 <style>
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+/* Base styles */
+body {
+  @apply bg-white dark:bg-gray-900;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #4caf50;
-}
-
-h2 {
-  margin-top: 0;
-  color: #2c3e50;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.examples-section {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-.examples-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.example-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 15px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.example-btn:hover {
-  background-color: #3e8e41;
-}
-
-.editor-panel {
-  display: flex;
-  gap: 20px;
-}
-
-@media (max-width: 768px) {
-  .editor-panel {
-    flex-direction: column;
-  }
-
-  .examples-container {
-    flex-direction: column;
-  }
-}
-
-.editor-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-textarea {
-  flex: 1;
-  min-height: 200px;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 14px;
-  resize: vertical;
-}
-
-.result-panel {
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  padding: 15px;
-}
-
-.result-content {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 12px;
-  font-family: monospace;
-  white-space: pre-wrap;
-  min-height: 100px;
-}
-
-.error {
-  color: #f44336;
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-.result-content.error {
-  color: #f44336;
-  border-color: #f44336;
-}
-
-.custom-operators-section {
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  padding: 20px;
-  margin-top: 30px;
-}
-
-.add-operator-panel {
-  background-color: #fff;
-  border-radius: 4px;
-  padding: 15px;
-  margin-top: 15px;
-  border: 1px solid #ddd;
-}
-
-.operator-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.form-group label {
-  font-weight: bold;
-}
-
-.form-group input,
-.form-group textarea {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
-.form-group textarea {
-  min-height: 80px;
-}
-
-.add-btn {
-  background-color: #2196f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.add-btn:hover {
-  background-color: #0b7dda;
-}
-
-.current-operators {
-  margin-top: 20px;
-}
-
-.operator-item {
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-}
-
-code {
-  background-color: #f1f1f1;
-  padding: 2px 5px;
-  border-radius: 3px;
-  font-family: monospace;
-}
+/* We're using Tailwind classes for most styling, so we can remove most custom CSS */
 </style>
