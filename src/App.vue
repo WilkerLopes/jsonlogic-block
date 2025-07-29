@@ -6,7 +6,7 @@
         <div
           class="flex-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-white dark:bg-gray-800"
         >
-          <BlockEditor v-model:jsonLogic="jsonLogicRules" />
+          <BlockEditor v-model:jsonLogic="jsonLogicRulesBlock" />
         </div>
       </div>
 
@@ -93,10 +93,12 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import jsonLogic from "json-logic-js";
-import { isNil, isEmpty } from "ramda";
+import { isNil, isEmpty, isNotNil } from "ramda";
+import { isNotNull, isNull } from "./helpers/nullCheck.ts";
 import BlockEditor from "./components/BlockEditor.vue";
 
 // Reactive state
+const jsonLogicRulesBlock = ref("");
 const jsonLogicRules = ref("");
 const dataObject = ref("");
 const jsonLogicError = ref(null);
@@ -111,9 +113,20 @@ const copyResultSuccess = ref(false);
 const copyJsonLogicSuccess = ref(false);
 const copyDataSuccess = ref(false);
 
+function getL(arr) {
+  if (Array.isArray(arr)) return arr.length;
+  if (typeof arr == "string") return arr.length;
+
+  return 0;
+}
+
 onMounted(() => {
+  jsonLogic.add_operation("isNotNull", isNotNull);
+  jsonLogic.add_operation("isNull", isNull);
+  jsonLogic.add_operation("isNotNil", isNotNil);
   jsonLogic.add_operation("isNil", isNil);
   jsonLogic.add_operation("isEmpty", isEmpty);
+  jsonLogic.add_operation("length", getL);
 
   // Initialize Preline UI
   import("preline/preline").then(({ HSThemeAppearance }) => {
